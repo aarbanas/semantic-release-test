@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/aarbanas/semantic-release-test/compare/v1.0.0...v1.1.0) (2025-04-25)
+
+
+### Features
+
+* add possibility to upload content on Confluence ([0666656](https://github.com/aarbanas/semantic-release-test/commit/0666656e453d14329bf1e8efcd58c81e6b9de29f))
+
 # 1.0.0 (2025-04-25)
 
 
