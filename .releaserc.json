@@ -8,5 +8,15 @@
     "@semantic-release/changelog",
     "@semantic-release/git",
     "@semantic-release/github"
+  ],
+  "success": [
+    {
+      "path": "./scripts/publish-to-confluence.js",
+      "env": {
+        "CONFLUENCE_USERNAME": "$CONFLUENCE_USERNAME",
+        "CONFLUENCE_API_TOKEN": "$CONFLUENCE_API_TOKEN",
+        "CONFLUENCE_URL": "$CONFLUENCE_URL"
+      }
+    }
   ]
 }
