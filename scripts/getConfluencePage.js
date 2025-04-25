@@ -1,20 +1,23 @@
-// scripts/publish-to-confluence.js
-import axios from "axios";
-
-// Get Confluence page by ID
 const getConfluencePage = async (pageId, url, auth) => {
   try {
-    const response = await axios.get(`${url}/${pageId}`, {
-      auth,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      params: {
-        expand: "body.storage,version,space,history",
-      },
-    });
-    return response.data;
+    const response = await fetch(
+      `${url}/${pageId}?expand=body.storage,version,space,history`,
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64")}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
   } catch (error) {
     console.error("Error getting Confluence page:", error.message);
     throw error;
@@ -38,27 +41,12 @@ export default async (pluginConfig, context) => {
     // Get parent page to verify access
     const parentPage = await getConfluencePage(parentPageId, url, auth);
 
-    // Print page details in a readable format
-    // logger.log("\n=== Page Details ===");
-    // logger.log(`Title: ${parentPage.title}`);
-    // logger.log(`ID: ${parentPage.id}`);
-    // logger.log(`Space: ${parentPage.space?.name || parentPage.space?.key}`);
-    // logger.log(`Version: ${parentPage.version?.number}`);
-    // logger.log(
-    //   `Created: ${new Date(parentPage.history?.createdDate).toLocaleString()}`
-    // );
-    // logger.log(
-    //   `Last Updated: ${new Date(
-    //     parentPage.history?.lastUpdated?.when
-    //   ).toLocaleString()}`
-    // );
-
     logger.log("\n=== Page Content ===");
-    logger.dir(parentPage.body, { depth: null });
-
-    // logger.log("\n=== Page Links ===");
-    // logger.log(`Web UI: ${parentPage._links?.webui}`);
-    // logger.log(`Tiny UI: ${parentPage._links?.tinyui}`);
+    if (parentPage.body?.storage?.value) {
+      logger.dir(parentPage.body.storage.value);
+    } else {
+      logger.log("No content found");
+    }
   } catch (error) {
     logger.error("Failed to get Confluence page:", error.message);
     if (error.response) {

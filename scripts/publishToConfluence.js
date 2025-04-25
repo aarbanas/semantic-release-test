@@ -1,14 +1,16 @@
-// scripts/publish-to-confluence.js
-import axios from "axios";
-
-// Get Confluence page by ID
 const getConfluencePage = async (pageId, auth) => {
   try {
-    const response = await axios.get(
-      `${process.env.CONFLUENCE_URL}/${pageId}`,
-      { auth }
-    );
-    return response.data;
+    const response = await fetch(`${process.env.CONFLUENCE_URL}/${pageId}`, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(
+          `${auth.username}:${auth.password}`
+        ).toString("base64")}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
   } catch (error) {
     console.error("Error getting Confluence page:", error.message);
     throw error;
@@ -101,9 +103,15 @@ export default async (pluginConfig, context) => {
     const confluenceContent = convertMarkdownToConfluence(notes);
 
     // Create a new Confluence page
-    const response = await axios.post(
-      url,
-      {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(
+          `${auth.username}:${auth.password}`
+        ).toString("base64")}`,
+      },
+      body: JSON.stringify({
         type: "page",
         title: `Release ${nextRelease.version} - ${new Date().toISOString()}`,
         space: { key: spaceKey },
@@ -114,12 +122,16 @@ export default async (pluginConfig, context) => {
             representation: "storage",
           },
         },
-      },
-      { auth }
-    );
+      }),
+    });
 
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
     logger.log(
-      `Successfully published notes to Confluence: ${response.data._links.webui}`
+      `Successfully published notes to Confluence: ${data._links.webui}`
     );
   } catch (error) {
     logger.error("Failed to push release notes to Confluence:", error.message);
