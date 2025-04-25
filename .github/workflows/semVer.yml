@@ -7,6 +7,10 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Allows pushing to the repo
+      issues: write # Optional: for closing issues
+      pull-requests: write # Optional: for PR references
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
