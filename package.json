@@ -2,6 +2,7 @@
   "name": "semantic-release-test",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "repository": "git@github.com:aarbanas/semantic-release-test.git",
   "author": "Andrej Arbanas <andrej.arbanas@porsche.digital>",
   "license": "MIT",
