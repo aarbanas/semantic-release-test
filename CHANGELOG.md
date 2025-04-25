@@ -1,3 +1,10 @@
+# [2.1.0](https://github.com/aarbanas/semantic-release-test/compare/v2.0.0...v2.1.0) (2025-04-25)
+
+
+### Features
+
+* parse content to confluence html ([34da7a1](https://github.com/aarbanas/semantic-release-test/commit/34da7a1562e8b20d8eecf66a70ba731c65788b03))
+
 # [2.0.0](https://github.com/aarbanas/semantic-release-test/compare/v1.1.2...v2.0.0) (2025-04-25)
 
 
