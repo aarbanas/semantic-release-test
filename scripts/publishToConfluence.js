@@ -11,17 +11,19 @@ export default async (pluginConfig, context) => {
     password: process.env.CONFLUENCE_API_TOKEN,
   };
 
+  const url = process.env.CONFLUENCE_URL;
+
   const spaceKey = "CHARGE"; // e.g., "DEV"
   const parentPageId = "7971635928"; // ID of the parent page where notes will be added
 
   console.log("CONFLUENCE_USERNAME", auth.username);
   console.log("CONFLUENCE_API_TOKEN", auth.password);
-  console.log("CONFLUENCE_URL", process.env.CONFLUENCE_URL);
+  console.log("CONFLUENCE_URL", url;
 
   // Create a new Confluence page
   try {
     const response = await axios.post(
-      process.env.CONFLUENCE_URL,
+      url,
       {
         type: "page",
         title: `Release ${nextRelease.version} - ${new Date().toISOString()}`,
