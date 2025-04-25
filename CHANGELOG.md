@@ -1,3 +1,10 @@
+## [2.1.1](https://github.com/aarbanas/semantic-release-test/compare/v2.1.0...v2.1.1) (2025-04-25)
+
+
+### Bug Fixes
+
+* replace axios with fetch ([63e4c4f](https://github.com/aarbanas/semantic-release-test/commit/63e4c4fbdfedccc8fce03a9dda4ddb3cbdaa2240))
+
 # [2.1.0](https://github.com/aarbanas/semantic-release-test/compare/v2.0.0...v2.1.0) (2025-04-25)
 
 
