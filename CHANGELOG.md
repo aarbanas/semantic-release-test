@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/aarbanas/semantic-release-test/compare/v1.1.1...v1.1.2) (2025-04-25)
+
+
+### Bug Fixes
+
+* sem ver workflow ([96a0ae6](https://github.com/aarbanas/semantic-release-test/commit/96a0ae6ca797e42d6d15db3433ed1c72ced153a2))
+
 ## [1.1.1](https://github.com/aarbanas/semantic-release-test/compare/v1.1.0...v1.1.1) (2025-04-25)
 
 
