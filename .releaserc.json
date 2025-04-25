@@ -11,7 +11,7 @@
   ],
   "success": [
     {
-      "path": "./scripts/publish-to-confluence.js",
+      "path": "./scripts/publishToConfluence.js",
       "env": {
         "CONFLUENCE_USERNAME": "$CONFLUENCE_USERNAME",
         "CONFLUENCE_API_TOKEN": "$CONFLUENCE_API_TOKEN",
