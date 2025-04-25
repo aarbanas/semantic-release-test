@@ -1,3 +1,15 @@
+# [2.0.0](https://github.com/aarbanas/semantic-release-test/compare/v1.1.2...v2.0.0) (2025-04-25)
+
+
+### Features
+
+* add breaking script ([eba9386](https://github.com/aarbanas/semantic-release-test/commit/eba93867fa4c4765c9ba1d0a6a6eb0ef419766df))
+
+
+### BREAKING CHANGES
+
+* Session tokens now expire after 1 hour instead of 24 hours.
+
 ## [1.1.2](https://github.com/aarbanas/semantic-release-test/compare/v1.1.1...v1.1.2) (2025-04-25)
 
 
