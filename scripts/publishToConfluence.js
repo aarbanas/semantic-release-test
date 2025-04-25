@@ -18,7 +18,7 @@ export default async (pluginConfig, context) => {
 
   console.log("CONFLUENCE_USERNAME", auth.username);
   console.log("CONFLUENCE_API_TOKEN", auth.password);
-  console.log("CONFLUENCE_URL", url;
+  console.log("CONFLUENCE_URL", url);
 
   // Create a new Confluence page
   try {
