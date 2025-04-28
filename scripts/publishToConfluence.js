@@ -72,13 +72,16 @@ const getCurrentYearAndWeek = () => {
 
 const getChildPages = async (url, parentId, auth) => {
   try {
-    const response = await fetch(`${url}/${parentId}/child/page`, {
-      headers: {
-        Authorization: `Basic ${Buffer.from(
-          `${auth.username}:${auth.password}`
-        ).toString("base64")}`,
-      },
-    });
+    const response = await fetch(
+      `${url}/${parentId}/child/page?expand=version`,
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64")}`,
+        },
+      }
+    );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -122,7 +125,7 @@ const findPIForCurrentWeek = (pages, year, currentWeek) => {
   });
 };
 
-const updateConfluencePage = async (pageId, content, auth, title) => {
+const updateConfluencePage = async (pageId, content, auth, title, version) => {
   try {
     const response = await fetch(
       `https://porschedigital.atlassian.net/wiki/rest/api/content/${pageId}`,
@@ -137,7 +140,7 @@ const updateConfluencePage = async (pageId, content, auth, title) => {
         },
         body: JSON.stringify({
           version: {
-            number: 2,
+            number: version + 1,
           },
           type: "page",
           title: title,
@@ -203,12 +206,14 @@ export default async (pluginConfig, context) => {
     // Convert markdown to Confluence format
     const confluenceContent = convertMarkdownToConfluence(notes);
 
+    console.log(targetPage);
     // Update the found page
     const updatedPage = await updateConfluencePage(
       targetPage.id,
       confluenceContent,
       auth,
-      targetPage.title
+      targetPage.title,
+      targetPage.version.number
     );
     logger.log(`Successfully updated PI page: ${updatedPage._links.webui}`);
   } catch (error) {
