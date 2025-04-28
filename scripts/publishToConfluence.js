@@ -10,10 +10,23 @@ const convertMarkdownToConfluence = (markdown) => {
 
   // Convert lists
   confluenceMarkdown = confluenceMarkdown
+    // First, convert all list items to li tags without their markers
     .replace(/^\s*[-*] (.*?)$/gm, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
     .replace(/^\s*\d+\. (.*?)$/gm, "<li>$1</li>")
-    .replace(/(<li>.*<\/li>)/gs, "<ol>$1</ol>");
+    .replace(/^\s*[a-z]\. (.*?)$/gm, "<li>$1</li>")
+    // Then group consecutive li tags into appropriate list types
+    .replace(/(<li>.*?<\/li>\n?)+/gs, (match) => {
+      // Check if the original content had numbers or letters
+      const originalLines = match.split("\n");
+      const firstLine = originalLines[0];
+      if (firstLine.match(/^\s*\d+\./)) {
+        return `<ol>${match}</ol>`;
+      } else if (firstLine.match(/^\s*[a-z]\./)) {
+        return `<ol type="a">${match}</ol>`;
+      } else {
+        return `<ul>${match}</ul>`;
+      }
+    });
 
   // Convert code blocks
   confluenceMarkdown = confluenceMarkdown.replace(
@@ -73,7 +86,7 @@ const getCurrentYearAndWeek = () => {
 const getChildPages = async (url, parentId, auth) => {
   try {
     const response = await fetch(
-      `${url}/${parentId}/child/page?expand=version`,
+      `${url}/${parentId}/child/page?expand=version,body.storage`,
       {
         headers: {
           Authorization: `Basic ${Buffer.from(
@@ -125,8 +138,18 @@ const findPIForCurrentWeek = (pages, year, currentWeek) => {
   });
 };
 
-const updateConfluencePage = async (pageId, content, auth, title, version) => {
+const updateConfluencePage = async (
+  pageId,
+  content,
+  auth,
+  title,
+  version,
+  existingContent
+) => {
   try {
+    // Combine existing content with new content
+    const combinedContent = `${existingContent}${content}`;
+
     const response = await fetch(
       `https://porschedigital.atlassian.net/wiki/rest/api/content/${pageId}`,
       {
@@ -146,7 +169,7 @@ const updateConfluencePage = async (pageId, content, auth, title, version) => {
           title: title,
           body: {
             storage: {
-              value: content,
+              value: combinedContent,
               representation: "storage",
             },
           },
@@ -206,14 +229,14 @@ export default async (pluginConfig, context) => {
     // Convert markdown to Confluence format
     const confluenceContent = convertMarkdownToConfluence(notes);
 
-    console.log(targetPage);
     // Update the found page
     const updatedPage = await updateConfluencePage(
       targetPage.id,
       confluenceContent,
       auth,
       targetPage.title,
-      targetPage.version.number
+      targetPage.version.number,
+      targetPage.body.storage.value
     );
     logger.log(`Successfully updated PI page: ${updatedPage._links.webui}`);
   } catch (error) {
