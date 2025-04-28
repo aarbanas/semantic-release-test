@@ -1,3 +1,20 @@
+# [3.0.0](https://github.com/aarbanas/semantic-release-test/compare/v2.3.3...v3.0.0) (2025-04-28)
+
+
+### Bug Fixes
+
+* mapping to confluence paragraphs ([8a7d399](https://github.com/aarbanas/semantic-release-test/commit/8a7d399ddc86edeb304396da3ada43644237a907))
+
+
+### chore
+
+* remove unused file ([6688635](https://github.com/aarbanas/semantic-release-test/commit/6688635b1bf24c047ccfb674f754a2e54bb50258))
+
+
+### BREAKING CHANGES
+
+* Remove deprecated APIs
+
 ## [2.3.3](https://github.com/aarbanas/semantic-release-test/compare/v2.3.2...v2.3.3) (2025-04-28)
 
 
