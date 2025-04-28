@@ -1,3 +1,10 @@
+## [2.3.1](https://github.com/aarbanas/semantic-release-test/compare/v2.3.0...v2.3.1) (2025-04-28)
+
+
+### Bug Fixes
+
+* page version update ([fb13cc3](https://github.com/aarbanas/semantic-release-test/commit/fb13cc316828e113ebae41ac6335ef76e23de7a6))
+
 # [2.3.0](https://github.com/aarbanas/semantic-release-test/compare/v2.2.0...v2.3.0) (2025-04-28)
 
 
