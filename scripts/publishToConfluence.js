@@ -2,10 +2,10 @@
 const convertMarkdownToConfluence = (markdown) => {
   let confluenceMarkdown = markdown;
 
-  // Convert headers to HTML format
+  // Convert headers to HTML format with horizontal lines
   confluenceMarkdown = confluenceMarkdown
-    .replace(/^# (.*?)$/gm, "<h1>$1</h1>")
-    .replace(/^## (.*?)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.*?)$/gm, "<h1>$1</h1><hr />")
+    .replace(/^## (.*?)$/gm, "<h2>$1</h2><hr />")
     .replace(/^### (.*?)$/gm, "<h3>$1</h3>");
 
   // Convert lists
