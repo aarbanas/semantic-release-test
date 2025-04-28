@@ -1,3 +1,10 @@
+# [2.3.0](https://github.com/aarbanas/semantic-release-test/compare/v2.2.0...v2.3.0) (2025-04-28)
+
+
+### Features
+
+* update script for pushing to confluence ([40ab4dc](https://github.com/aarbanas/semantic-release-test/commit/40ab4dc53695d81816412ed58cfc6d5220d997a9))
+
 # [2.2.0](https://github.com/aarbanas/semantic-release-test/compare/v2.1.1...v2.2.0) (2025-04-28)
 
 
