@@ -4,15 +4,12 @@ import publishToConfluence from "./publishToConfluence.js";
 const mockContext = {
   nextRelease: {
     version: "1.0.0",
-    notes: `# Release Notes
+    notes: `## [2.3.3](https://github.com/aarbanas/semantic-release-test/compare/v2.3.2...v2.3.3) (2025-04-28)
 
-## New Features
-- Added new feature A
-- Implemented feature B
 
-## Bug Fixes
-- Fixed issue with X
-- Resolved problem with Y`,
+### Bug Fixes
+
+* separation between versions mapping ([81db274](https://github.com/aarbanas/semantic-release-test/commit/81db274d3289bf416727754f81b32dd08fbea1ee))`,
   },
   logger: {
     log: console.log,
