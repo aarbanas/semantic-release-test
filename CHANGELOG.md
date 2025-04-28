@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/aarbanas/semantic-release-test/compare/v2.1.1...v2.2.0) (2025-04-28)
+
+
+### Features
+
+* add logic for updating and creating new pages based on PI ([24e6f82](https://github.com/aarbanas/semantic-release-test/commit/24e6f829712dbc11281de863480c17960a79761f))
+
 ## [2.1.1](https://github.com/aarbanas/semantic-release-test/compare/v2.1.0...v2.1.1) (2025-04-25)
 
 
