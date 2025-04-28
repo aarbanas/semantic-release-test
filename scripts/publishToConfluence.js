@@ -51,17 +51,6 @@ const convertMarkdownToConfluence = (markdown) => {
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\*([^*]+)\*/g, "<em>$1</em>");
 
-  // Convert paragraphs and ensure proper spacing
-  confluenceMarkdown = confluenceMarkdown
-    .split("\n\n")
-    .map((block) => {
-      if (!block.startsWith("<") || !block.endsWith(">")) {
-        return `<p>${block}</p>`;
-      }
-      return block;
-    })
-    .join("\n");
-
   // Convert user mentions (if any)
   confluenceMarkdown = confluenceMarkdown.replace(
     /@([\w-]+)/g,
@@ -70,7 +59,6 @@ const convertMarkdownToConfluence = (markdown) => {
 
   // Clean up any remaining newlines
   confluenceMarkdown = confluenceMarkdown.replace(/\n{3,}/g, "\n\n").trim();
-
   return confluenceMarkdown;
 };
 
