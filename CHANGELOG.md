@@ -1,3 +1,10 @@
+## [2.3.2](https://github.com/aarbanas/semantic-release-test/compare/v2.3.1...v2.3.2) (2025-04-28)
+
+
+### Bug Fixes
+
+* bulletpoints mapping ([6da5550](https://github.com/aarbanas/semantic-release-test/commit/6da5550cf7d475e82743b9944b50fd21ed460d31))
+
 ## [2.3.1](https://github.com/aarbanas/semantic-release-test/compare/v2.3.0...v2.3.1) (2025-04-28)
 
 
