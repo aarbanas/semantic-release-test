@@ -80,6 +80,71 @@ const convertMarkdownToConfluence = (markdown) => {
   return confluenceMarkdown;
 };
 
+const getCurrentYearAndWeek = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const weekNumber = Math.ceil(
+    (now - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000)
+  );
+  return { year, weekNumber };
+};
+
+const searchConfluencePage = async (title, auth) => {
+  try {
+    const response = await fetch(
+      `${process.env.CONFLUENCE_URL}/content/search?cql=title="${title}"`,
+      {
+        headers: {
+          Authorization: `Basic ${Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64")}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.results[0]; // Return first matching page or undefined
+  } catch (error) {
+    console.error("Error searching Confluence page:", error.message);
+    throw error;
+  }
+};
+
+const updateConfluencePage = async (pageId, content, auth) => {
+  try {
+    const response = await fetch(
+      `${process.env.CONFLUENCE_URL}/content/${pageId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64")}`,
+        },
+        body: JSON.stringify({
+          version: { number: 2 },
+          body: {
+            storage: {
+              value: content,
+              representation: "storage",
+            },
+          },
+        }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error updating Confluence page:", error.message);
+    throw error;
+  }
+};
+
 export default async (pluginConfig, context) => {
   const { nextRelease, logger } = context;
   const { notes } = nextRelease;
@@ -95,44 +160,57 @@ export default async (pluginConfig, context) => {
   const parentPageId = "7971635928";
 
   try {
-    // Get parent page to verify access
-    const parentPage = await getConfluencePage(parentPageId, auth);
-    logger.log(`Successfully accessed parent page: ${parentPage.title}`);
+    // Get current year and week number
+    const { year, weekNumber } = getCurrentYearAndWeek();
+    const pageTitle = `PI${year}.${weekNumber}`;
+
+    // Check if page already exists
+    const existingPage = await searchConfluencePage(pageTitle, auth);
 
     // Convert markdown to Confluence format
     const confluenceContent = convertMarkdownToConfluence(notes);
 
-    // Create a new Confluence page
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Basic ${Buffer.from(
-          `${auth.username}:${auth.password}`
-        ).toString("base64")}`,
-      },
-      body: JSON.stringify({
-        type: "page",
-        title: `Release ${nextRelease.version} - ${new Date().toISOString()}`,
-        space: { key: spaceKey },
-        ancestors: [{ id: parentPageId }],
-        body: {
-          storage: {
-            value: confluenceContent,
-            representation: "storage",
-          },
+    if (existingPage) {
+      // Update existing page
+      const updatedPage = await updateConfluencePage(
+        existingPage.id,
+        confluenceContent,
+        auth
+      );
+      logger.log(
+        `Successfully updated existing page: ${updatedPage._links.webui}`
+      );
+    } else {
+      // Create new page
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Basic ${Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64")}`,
         },
-      }),
-    });
+        body: JSON.stringify({
+          type: "page",
+          title: pageTitle,
+          space: { key: spaceKey },
+          ancestors: [{ id: parentPageId }],
+          body: {
+            storage: {
+              value: confluenceContent,
+              representation: "storage",
+            },
+          },
+        }),
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      logger.log(`Successfully created new page: ${data._links.webui}`);
     }
-
-    const data = await response.json();
-    logger.log(
-      `Successfully published notes to Confluence: ${data._links.webui}`
-    );
   } catch (error) {
     logger.error("Failed to push release notes to Confluence:", error.message);
     process.exit(1);
