@@ -1,22 +1,3 @@
-const getConfluencePage = async (pageId, auth) => {
-  try {
-    const response = await fetch(`${process.env.CONFLUENCE_URL}/${pageId}`, {
-      headers: {
-        Authorization: `Basic ${Buffer.from(
-          `${auth.username}:${auth.password}`
-        ).toString("base64")}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Error getting Confluence page:", error.message);
-    throw error;
-  }
-};
-
 // Simple markdown to Confluence converter
 const convertMarkdownToConfluence = (markdown) => {
   let confluenceMarkdown = markdown;
@@ -83,39 +64,68 @@ const convertMarkdownToConfluence = (markdown) => {
 const getCurrentYearAndWeek = () => {
   const now = new Date();
   const year = now.getFullYear();
-  const weekNumber = Math.ceil(
+  const currentWeek = Math.ceil(
     (now - new Date(year, 0, 1)) / (7 * 24 * 60 * 60 * 1000)
   );
-  return { year, weekNumber };
+  return { year, currentWeek };
 };
 
-const searchConfluencePage = async (title, auth) => {
+const getChildPages = async (url, parentId, auth) => {
   try {
-    const response = await fetch(
-      `${process.env.CONFLUENCE_URL}/content/search?cql=title="${title}"`,
-      {
-        headers: {
-          Authorization: `Basic ${Buffer.from(
-            `${auth.username}:${auth.password}`
-          ).toString("base64")}`,
-        },
-      }
-    );
+    const response = await fetch(`${url}/${parentId}/child/page`, {
+      headers: {
+        Authorization: `Basic ${Buffer.from(
+          `${auth.username}:${auth.password}`
+        ).toString("base64")}`,
+      },
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data = await response.json();
-    return data.results[0]; // Return first matching page or undefined
+    return await response.json();
   } catch (error) {
-    console.error("Error searching Confluence page:", error.message);
+    console.error("Error getting child pages:", error.message);
     throw error;
   }
 };
 
-const updateConfluencePage = async (pageId, content, auth) => {
+const findPIForCurrentWeek = (pages, year, currentWeek) => {
+  // Parse each page title to find the matching one
+  return pages.find((page, index) => {
+    if (!page.title.startsWith("PI-")) return false;
+
+    const [, yearWeek] = page.title.split("-");
+    const [pageYear, pageWeek] = yearWeek.split(".");
+    if (parseInt(pageYear) < new Date().getFullYear()) {
+      return false;
+    }
+
+    // If this is the last page, only check if current week is greater than or equal to its week
+    if (index === pages.length - 1) {
+      return parseInt(pageYear) === year && parseInt(pageWeek) <= currentWeek;
+    }
+
+    // For all other pages, check against the next page
+    const nextPage = pages[index + 1];
+    if (!nextPage || !nextPage.title.startsWith("PI-")) {
+      return false;
+    }
+
+    const [, nextChildYearWeek] = nextPage.title.split("-");
+    const [, nextChildPageWeek] = nextChildYearWeek.split(".");
+
+    return (
+      parseInt(pageYear) === year &&
+      parseInt(pageWeek) <= currentWeek &&
+      parseInt(nextChildPageWeek) > currentWeek
+    );
+  });
+};
+
+const updateConfluencePage = async (pageId, content, auth, title) => {
   try {
     const response = await fetch(
-      `${process.env.CONFLUENCE_URL}/content/${pageId}`,
+      `https://porschedigital.atlassian.net/wiki/rest/api/content/${pageId}`,
       {
         method: "PUT",
         headers: {
@@ -123,9 +133,14 @@ const updateConfluencePage = async (pageId, content, auth) => {
           Authorization: `Basic ${Buffer.from(
             `${auth.username}:${auth.password}`
           ).toString("base64")}`,
+          Accept: "application/json",
         },
         body: JSON.stringify({
-          version: { number: 2 },
+          version: {
+            number: 2,
+          },
+          type: "page",
+          title: title,
           body: {
             storage: {
               value: content,
@@ -135,9 +150,16 @@ const updateConfluencePage = async (pageId, content, auth) => {
         }),
       }
     );
+
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const errorData = await response.json();
+      throw new Error(
+        `HTTP error! status: ${response.status}, message: ${JSON.stringify(
+          errorData
+        )}`
+      );
     }
+
     return await response.json();
   } catch (error) {
     console.error("Error updating Confluence page:", error.message);
@@ -160,59 +182,38 @@ export default async (pluginConfig, context) => {
   const parentPageId = "7971635928";
 
   try {
-    // Get current year and week number
-    const { year, weekNumber } = getCurrentYearAndWeek();
-    const pageTitle = `PI${year}.${weekNumber}`;
+    // Get current year and week
+    const { year, currentWeek } = getCurrentYearAndWeek();
 
-    // Check if page already exists
-    const existingPage = await searchConfluencePage(pageTitle, auth);
+    // Get all child pages under the parent
+    const { results: childPages } = await getChildPages(
+      url,
+      parentPageId,
+      auth
+    );
+
+    // Find the appropriate PI page for current week
+    const targetPage = findPIForCurrentWeek(childPages, year, currentWeek);
+    if (!targetPage) {
+      throw new Error(
+        `No PI page found for current week ${currentWeek} in year ${year}`
+      );
+    }
 
     // Convert markdown to Confluence format
     const confluenceContent = convertMarkdownToConfluence(notes);
 
-    if (existingPage) {
-      // Update existing page
-      const updatedPage = await updateConfluencePage(
-        existingPage.id,
-        confluenceContent,
-        auth
-      );
-      logger.log(
-        `Successfully updated existing page: ${updatedPage._links.webui}`
-      );
-    } else {
-      // Create new page
-      const response = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${Buffer.from(
-            `${auth.username}:${auth.password}`
-          ).toString("base64")}`,
-        },
-        body: JSON.stringify({
-          type: "page",
-          title: pageTitle,
-          space: { key: spaceKey },
-          ancestors: [{ id: parentPageId }],
-          body: {
-            storage: {
-              value: confluenceContent,
-              representation: "storage",
-            },
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      logger.log(`Successfully created new page: ${data._links.webui}`);
-    }
+    // Update the found page
+    const updatedPage = await updateConfluencePage(
+      targetPage.id,
+      confluenceContent,
+      auth,
+      targetPage.title
+    );
+    logger.log(`Successfully updated PI page: ${updatedPage._links.webui}`);
   } catch (error) {
     logger.error("Failed to push release notes to Confluence:", error.message);
+    logger.error(error);
     process.exit(1);
   }
 };
