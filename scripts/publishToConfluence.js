@@ -93,6 +93,35 @@ const getChildPages = async (url, parentId, auth) => {
   }
 };
 
+const getYearPage = async (url, parentId, year, auth) => {
+  try {
+    // Get all child pages of the parent
+    const { results: yearPages } = await getChildPages(url, parentId, auth);
+
+    // Find the page with title matching the year
+    const yearPage = yearPages.find((page) => page.title === year.toString());
+
+    if (!yearPage) {
+      throw new Error(`No page found for year ${year}`);
+    }
+
+    return yearPage;
+  } catch (error) {
+    console.error("Error getting year page:", error.message);
+    throw error;
+  }
+};
+
+const getPIPages = async (url, yearPageId, auth) => {
+  try {
+    const { results: piPages } = await getChildPages(url, yearPageId, auth);
+    return piPages.filter((page) => page.title.startsWith("PI-"));
+  } catch (error) {
+    console.error("Error getting PI pages:", error.message);
+    throw error;
+  }
+};
+
 const findPIForCurrentWeek = (pages, year, currentWeek) => {
   // Parse each page title to find the matching one
   return pages.find((page, index) => {
@@ -127,6 +156,7 @@ const findPIForCurrentWeek = (pages, year, currentWeek) => {
 };
 
 const updateConfluencePage = async (
+  url,
   pageId,
   content,
   auth,
@@ -138,32 +168,29 @@ const updateConfluencePage = async (
     // Combine existing content with new content
     const combinedContent = `${existingContent}${content}`;
 
-    const response = await fetch(
-      `https://porschedigital.atlassian.net/wiki/rest/api/content/${pageId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Basic ${Buffer.from(
-            `${auth.username}:${auth.password}`
-          ).toString("base64")}`,
-          Accept: "application/json",
+    const response = await fetch(`${url}/${pageId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${Buffer.from(
+          `${auth.username}:${auth.password}`
+        ).toString("base64")}`,
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        version: {
+          number: version + 1,
         },
-        body: JSON.stringify({
-          version: {
-            number: version + 1,
+        type: "page",
+        title: title,
+        body: {
+          storage: {
+            value: combinedContent,
+            representation: "storage",
           },
-          type: "page",
-          title: title,
-          body: {
-            storage: {
-              value: combinedContent,
-              representation: "storage",
-            },
-          },
-        }),
-      }
-    );
+        },
+      }),
+    });
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -192,22 +219,23 @@ export default async (pluginConfig, context) => {
   };
 
   const url = process.env.CONFLUENCE_URL;
-  const spaceKey = "CHARGE";
-  const parentPageId = "7971635928";
+  const parentPageId = process.env.CONFLUENCE_PARENT_PAGE_ID;
 
   try {
     // Get current year and week
     const { year, currentWeek } = getCurrentYearAndWeek();
 
-    // Get all child pages under the parent
-    const { results: childPages } = await getChildPages(
-      url,
-      parentPageId,
-      auth
-    );
+    // First get the year page
+    const yearPage = await getYearPage(url, parentPageId, year, auth);
+    logger.log(`Found year page: ${yearPage.title}`);
+
+    // Then get all PI pages under the year page
+    const piPages = await getPIPages(url, yearPage.id, auth);
+    logger.log(`Found ${piPages.length} PI pages for year ${year}`);
 
     // Find the appropriate PI page for current week
-    const targetPage = findPIForCurrentWeek(childPages, year, currentWeek);
+    const targetPage = findPIForCurrentWeek(piPages, year, currentWeek);
+
     if (!targetPage) {
       throw new Error(
         `No PI page found for current week ${currentWeek} in year ${year}`
@@ -219,6 +247,7 @@ export default async (pluginConfig, context) => {
 
     // Update the found page
     const updatedPage = await updateConfluencePage(
+      url,
       targetPage.id,
       confluenceContent,
       auth,
