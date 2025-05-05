@@ -1,3 +1,10 @@
+## [3.1.1](https://github.com/aarbanas/semantic-release-test/compare/v3.1.0...v3.1.1) (2025-05-05)
+
+
+### Bug Fixes
+
+* test pushing to confluence ([dab9630](https://github.com/aarbanas/semantic-release-test/commit/dab9630395434b90b426e543662bf3c16b838327))
+
 # [3.1.0](https://github.com/aarbanas/semantic-release-test/compare/v3.0.0...v3.1.0) (2025-05-05)
 
 
