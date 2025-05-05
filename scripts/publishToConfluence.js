@@ -89,6 +89,8 @@ const getChildPages = async (url, parentId, auth) => {
     return await response.json();
   } catch (error) {
     console.error("Error getting child pages:", error.message);
+    console.error("url", url);
+    console.error("parentId", parentId);
     throw error;
   }
 };
