@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/aarbanas/semantic-release-test/compare/v3.1.1...v3.1.2) (2025-05-05)
+
+
+### Bug Fixes
+
+* parent id to be passed in the env variable ([3efda0d](https://github.com/aarbanas/semantic-release-test/commit/3efda0dd952185f5c9fcbadf512ac5307ea48de5))
+
 ## [3.1.1](https://github.com/aarbanas/semantic-release-test/compare/v3.1.0...v3.1.1) (2025-05-05)
 
 
