@@ -1,3 +1,10 @@
+# [3.1.0](https://github.com/aarbanas/semantic-release-test/compare/v3.0.0...v3.1.0) (2025-05-05)
+
+
+### Features
+
+* restructure the releases pages and move parent page id to env variable ([ea0c1a6](https://github.com/aarbanas/semantic-release-test/commit/ea0c1a69849f77f5f5e7b1e983207eb4066371e9))
+
 # [3.0.0](https://github.com/aarbanas/semantic-release-test/compare/v2.3.3...v3.0.0) (2025-04-28)
 
 
