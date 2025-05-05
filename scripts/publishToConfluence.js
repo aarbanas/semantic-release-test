@@ -89,8 +89,6 @@ const getChildPages = async (url, parentId, auth) => {
     return await response.json();
   } catch (error) {
     console.error("Error getting child pages:", error.message);
-    console.error("url", url);
-    console.error("parentId", parentId);
     throw error;
   }
 };
@@ -110,7 +108,6 @@ const getYearPage = async (url, parentId, year, auth) => {
     return yearPage;
   } catch (error) {
     console.error("Error getting year page:", error.message);
-    console.error("year", year);
     throw error;
   }
 };
