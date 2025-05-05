@@ -110,6 +110,7 @@ const getYearPage = async (url, parentId, year, auth) => {
     return yearPage;
   } catch (error) {
     console.error("Error getting year page:", error.message);
+    console.error("year", year);
     throw error;
   }
 };
