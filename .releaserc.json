@@ -5,8 +5,6 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
-    "@semantic-release/changelog",
-    "@semantic-release/git",
     "@semantic-release/github"
   ],
   "success": [
@@ -15,7 +13,8 @@
       "env": {
         "CONFLUENCE_USERNAME": "$CONFLUENCE_USERNAME",
         "CONFLUENCE_API_TOKEN": "$CONFLUENCE_API_TOKEN",
-        "CONFLUENCE_URL": "$CONFLUENCE_URL"
+        "CONFLUENCE_URL": "$CONFLUENCE_URL",
+        "CONFLUENCE_PARENT_PAGE_ID": "$CONFLUENCE_PARENT_PAGE_ID"
       }
     }
   ]

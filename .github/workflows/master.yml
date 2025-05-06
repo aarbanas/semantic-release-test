@@ -1,0 +1,15 @@
+name: 🚀 Master
+
+on:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  semanticRelease:
+    name: 🚀 Semantic Release
+    uses: ./.github/workflows/semVer.yml
+    secrets: inherit
