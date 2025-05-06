@@ -1,0 +1,31 @@
+name: 🚀 Main
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  trigger_release:
+    runs-on: ubuntu-latest
+    environment: prod
+    outputs:
+      commit_sha: ${{ steps.get_commit.outputs.commit_sha }}
+    steps:
+      - name: Get Commit SHA
+        id: get_commit
+        run: echo "commit_sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Output SHA for verification
+        run: echo "Commit SHA to release is ${{ steps.get_commit.outputs.commit_sha }}"
+
+  semanticRelease:
+    name: 🚀 Semantic Release
+    needs: trigger_release
+    uses: ./.github/workflows/semVer.yml
+    with:
+      environment: prod
+    secrets: inherit
