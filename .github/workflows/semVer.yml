@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - run: npx semantic-release
+      - run: npx semantic-release --no-ci
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
