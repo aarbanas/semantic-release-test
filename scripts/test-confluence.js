@@ -9,7 +9,7 @@ const mockContext = {
 
 ### Bug Fixes
 
-* separation between versions mapping ([81db274](https://github.com/aarbanas/semantic-release-test/commit/81db274d3289bf416727754f81b32dd08fbea1ee))`,
+* separation between versions mapping CHAR-1234 ([81db274](https://github.com/aarbanas/semantic-release-test/commit/81db274d3289bf416727754f81b32dd08fbea1ee))`,
   },
   logger: {
     log: console.log,

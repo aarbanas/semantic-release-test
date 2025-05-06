@@ -28,6 +28,12 @@ const convertMarkdownToConfluence = (markdown) => {
       }
     });
 
+  // Convert CHAR-XXXX ticket references to hyperlinks
+  confluenceMarkdown = confluenceMarkdown.replace(
+    /CHAR-(\d+)/g,
+    '<a href="https://porschedigital.atlassian.net/browse/CHAR-$1">CHAR-$1</a>'
+  );
+
   // Convert code blocks
   confluenceMarkdown = confluenceMarkdown.replace(
     /```(\w*)\n([\s\S]*?)\n```/g,
