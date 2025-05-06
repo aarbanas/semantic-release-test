@@ -3,19 +3,95 @@
     "main"
   ],
   "plugins": [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
-    "@semantic-release/github"
-  ],
-  "success": [
-    {
-      "path": "./scripts/publishToConfluence.js",
-      "env": {
-        "CONFLUENCE_USERNAME": "$CONFLUENCE_USERNAME",
-        "CONFLUENCE_API_TOKEN": "$CONFLUENCE_API_TOKEN",
-        "CONFLUENCE_URL": "$CONFLUENCE_URL",
-        "CONFLUENCE_PARENT_PAGE_ID": "$CONFLUENCE_PARENT_PAGE_ID"
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "parserOpts": {
+          "noteKeywords": [
+            "BREAKING CHANGE",
+            "BREAKING CHANGES"
+          ]
+        }
       }
-    }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            {
+              "type": "feat",
+              "section": "✨ New Features",
+              "hidden": false
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Bug Fixes",
+              "hidden": false
+            },
+            {
+              "type": "perf",
+              "section": "⚡ Performance Improvements",
+              "hidden": false
+            },
+            {
+              "type": "revert",
+              "section": "⏪ Reverts",
+              "hidden": false
+            },
+            {
+              "type": "docs",
+              "section": "📝 Documentation",
+              "hidden": false
+            },
+            {
+              "type": "style",
+              "section": "💄 Styles",
+              "hidden": false
+            },
+            {
+              "type": "refactor",
+              "section": "♻️ Code Refactoring",
+              "hidden": false
+            },
+            {
+              "type": "test",
+              "section": "✅ Tests",
+              "hidden": false
+            },
+            {
+              "type": "build",
+              "section": "📦 Build System",
+              "hidden": false
+            },
+            {
+              "type": "ci",
+              "section": "⚙️ Continuous Integration",
+              "hidden": false
+            },
+            {
+              "type": "chore",
+              "section": "🛠️ Chores & Maintenance",
+              "hidden": false
+            }
+          ]
+        }
+      }
+    ],
+    "@semantic-release/github",
+    [
+      "success",
+      {
+        "path": "./scripts/publishToConfluence.js",
+        "env": {
+          "CONFLUENCE_USERNAME": "$CONFLUENCE_USERNAME",
+          "CONFLUENCE_API_TOKEN": "$CONFLUENCE_API_TOKEN",
+          "CONFLUENCE_URL": "$CONFLUENCE_URL",
+          "CONFLUENCE_PARENT_PAGE_ID": "$CONFLUENCE_PARENT_PAGE_ID"
+        }
+      }
+    ]
   ]
 }
