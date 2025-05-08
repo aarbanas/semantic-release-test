@@ -19,7 +19,7 @@ jobs:
     permissions:
       contents: write # To create tags and releases
     steps:
-      - name: Checkout repository
+      - name: Checkout to specific commit
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }} # Uses the input SHA
@@ -30,6 +30,14 @@ jobs:
         with:
           node-version: "20.x"
           cache: "yarn"
+
+      - name: Create temporary local release branch
+        id: temp_branch
+        run: |
+          TEMP_BRANCH_NAME="refs/heads/temprelease/${{ inputs.ref }}"
+          git checkout -b "$TEMP_BRANCH_NAME"
+          echo "branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
+          echo "Current branch is $(git rev-parse --abbrev-ref HEAD)"
 
       - name: Install dependencies
         run: yarn
