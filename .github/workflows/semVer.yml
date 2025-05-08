@@ -25,6 +25,9 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
+      - name: Setup Nyx
+        uses: mooltiverse/nyx@main # Or a specific version like @v3.1.0
+
       - name: Setup Node.js # If you still need it for npm publish or other scripts
         uses: actions/setup-node@v3
         with:
