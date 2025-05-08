@@ -12,11 +12,6 @@ on:
         description: Git ref to checkout
         required: false
         default: ${{ github.sha }}
-      source_branch:
-        type: string
-        description: The source branch for commit history analysis (e.g., main, master)
-        required: true
-        default: main
 
 jobs:
   release:
@@ -27,77 +22,84 @@ jobs:
       - name: Checkout to source branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_branch }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      - name: Verify commit exists on source branch and checkout specific commit
-        run: |
-          TARGET_COMMIT_SHA="${{ inputs.ref }}"
-          SOURCE_BRANCH_NAME="${{ inputs.source_branch }}"
-
-          echo "Verifying commit $TARGET_COMMIT_SHA is part of fetched history for origin/$SOURCE_BRANCH_NAME..."
-
-          if ! git cat-file -e "$TARGET_COMMIT_SHA^{commit}" ; then
-            echo "Error: Commit $TARGET_COMMIT_SHA not found in the fetched repository history."
-            exit 1
-          fi
-
-          echo "Checking out specific commit SHA: $TARGET_COMMIT_SHA"
-          git checkout "$TARGET_COMMIT_SHA"
-
-      - name: Create, checkout, and push temporary local release branch
-        id: temp_branch_setup
-        run: |
-          COMMIT_SHA="${{ inputs.ref }}"
-          TEMP_BRANCH_NAME="temprelease/${{ inputs.ref }}"
-          git branch "$TEMP_BRANCH_NAME"
-          git checkout "$TEMP_BRANCH_NAME"
-
-          echo "Pushing temporary branch $TEMP_BRANCH_NAME to remote origin"
-          git push origin "$TEMP_BRANCH_NAME" # <--- PUSH THE TEMP BRANCH
-          echo "current_branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
-
-          echo "branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
-          echo "Current branch is $(git rev-parse --abbrev-ref HEAD) at commit $(git rev-parse HEAD)"
-          echo "Source branch for history analysis by semantic-release is effectively leading up to this commit."
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Nyx
+        uses: mooltiverse/nyx@main # Or a specific version like @v3.1.0
         with:
-          node-version: "20.x"
-          cache: "yarn"
+          # Version of Nyx to use, e.g., '3.1.0' or 'latest'
+          # If not specified, it often uses the latest stable. Check action docs.
+          version: "latest"
 
-      - name: Install dependencies
-        run: yarn
+      - name: Setup Node.js # If you still need it for npm publish or other scripts
+        uses: actions/setup-node@v3
+        with:
+          node-version: "lts/*"
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
 
-      - run: npx semantic-release
+      - name: Run Nyx Release and Capture Outputs
+        id: run_nyx
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
-          CONFLUENCE_API_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
-          CONFLUENCE_URL: ${{ secrets.CONFLUENCE_URL }}
-          CONFLUENCE_PARENT_PAGE_ID: ${{ secrets.CONFLUENCE_PARENT_PAGE_ID }}
-          # Override CI environment variables that semantic-release might use
-          # to determine the "CI branch" vs. the "git branch".
-          # We want it to use the actual git branch after our checkout.
-          GITHUB_REF_NAME: "" # This is often the one semantic-release uses.
-          GITHUB_REF: "" # Can also try unsetting this if GITHUB_REF_NAME alone isn't enough
-          GITHUB_HEAD_REF: "" # Usually for PRs, but unsetting won't hurt
-
-      - name: Clean up temporary branch (optional but good practice)
-        if: always() # Run even if semantic-release fails, to ensure cleanup
+          # Nyx uses these for the GitHub service if not overridden in .nyx.json
+          GITHUB_REPOSITORY_NAME: ${{ github.repository }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
         run: |
-          echo "Switching back to the original source branch ref locally (detached HEAD)"
-          git checkout ${{ inputs.ref }}
-            
-          TEMP_BRANCH_NAME=${{ steps.temp_branch_setup.outputs.branch_name }}
+          echo "Running Nyx..."
+          # 'nyx release' will infer version, tag, generate changelog, and publish to GitHub
+          # It respects the .nyx.json configuration.
+          # To get outputs, Nyx can write them to files or standard out.
+          # We'll rely on its standard output parsing or specific output files if available.
+          # For robust output capture, Nyx often writes to a state file or summary.
+          # Let's try to parse its summary or specific output files.
 
-          echo "Deleting local temporary branch $TEMP_BRANCH_NAME"
-          git branch -D "$TEMP_BRANCH_NAME"
+          # Nyx command for full release cycle (infer, tag, publish services)
+          nyx release --summary-file nyx_summary.txt
 
-          echo "Deleting remote temporary branch origin/$TEMP_BRANCH_NAME"
-          # Use GITHUB_TOKEN for authentication if your default token has push rights
-          git push origin --delete "$TEMP_BRANCH_NAME" || echo "Failed to delete remote branch $TEMP_BRANCH_NAME. It might not exist or permissions issue."
+          # Check if Nyx decided to release
+          if grep -q "Version: BUMP" nyx_summary.txt || grep -q "Version: NEW" nyx_summary.txt || ! grep -q "Version: SAME" nyx_summary.txt; then
+            echo "released=true" >> $GITHUB_OUTPUT
+          else
+            echo "released=false" >> $GITHUB_OUTPUT
+            echo "Nyx determined no new release was necessary."
+            # Extract the current version even if no release
+            CURRENT_VERSION=$(nyx version --current || echo "N/A")
+            echo "version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+            echo "tag_name=" >> $GITHUB_OUTPUT # No new tag
+            echo "release_notes=" >> $GITHUB_OUTPUT
+            exit 0 # Exit successfully if no release is made
+          fi
 
-          echo "Local branches:"
-          git branch
+          # If released, extract information
+          VERSION=$(nyx version --current) # Get the version Nyx just set/used
+          TAG_NAME=$(nyx version --current --scheme "TAG") # Get the tag name (e.g., v1.2.3)
+          # Nyx 'changelog' command can output the current release notes
+          # Run it *after* 'nyx release' has determined the version range
+          RELEASE_NOTES=$(nyx changelog --release LATEST || echo "Could not retrieve release notes.")
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
+          echo "${RELEASE_NOTES}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "Nyx process completed."
+          echo "Version: $VERSION"
+          echo "Tag: $TAG_NAME"
+
+      - name: Display Nyx Outputs
+        if: steps.run_nyx.outputs.released == 'true'
+        run: |
+          echo "Nyx determined version: ${{ steps.run_nyx.outputs.new_version }}"
+          echo "Tag created: ${{ steps.run_nyx.outputs.tag_name }}"
+          echo "--- Release Notes Content ---"
+          echo "${{ steps.run_nyx.outputs.release_notes }}"
+          echo "--- End Release Notes Content ---"
+
+      - name: Run Nyx Release (Tag & GitHub Release)
+        id: nyx_release
+        uses: mooltiverse/nyx@main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

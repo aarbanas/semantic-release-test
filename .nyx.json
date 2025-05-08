@@ -1,0 +1,74 @@
+{
+    "preset": "conventionalcommits",
+    "dryRun": false,
+    "summary": true,
+    "stateFile": "state.json",
+    "releaseTypes": {
+        "enabled": [
+            "main",
+            "integration",
+            "hotfix",
+            "maintenance",
+            "preview",
+            "patch"
+        ],
+        "publicationServices": [
+            "github"
+        ],
+        "remoteRepositories": [
+            "origin"
+        ]
+    },
+    "services": {
+        "github": {
+            "type": "GITHUB",
+            "options": {
+                "AUTHENTICATION_TOKEN": "{{#environmentVariable}}GITHUB_TOKEN{{/environmentVariable}}",
+                "REPOSITORY_NAME": "{{#environmentVariable}}GITHUB_REPOSITORY_NAME{{/environmentVariable}}",
+                "REPOSITORY_OWNER": "{{#environmentVariable}}GITHUB_REPOSITORY_OWNER{{/environmentVariable}}"
+            },
+            "releaseName": "v{{version.version}}",
+            "releaseAssets": []
+        }
+    },
+    "changelog": {
+        "sections": {
+            "feat": "✨ Features",
+            "fix": "🐛 Bug Fixes",
+            "perf": "🚀 Performance Improvements",
+            "docs": "📝 Documentation",
+            "style": "💅 Styles",
+            "refactor": "🔨 Code Refactoring",
+            "test": "🧪 Tests",
+            "build": "🏗️ Build System",
+            "ci": "🤖 Continuous Integration",
+            "chore": "🧹 Chores"
+        },
+        "template": null,
+        "substitutions": []
+    },
+    "version": {
+        "scheme": "SEMVER"
+    },
+    "substitutions": {
+        "enabled": [],
+        "items": []
+    },
+    "git": {
+        "commitMessageConventions": {
+            "conventionalcommits": {
+                "expression": "(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|bump)(?:\\((?<scope>[a-zA-Z0-9_\\-\\/\\.]+)\\))?(?<breaking>!)?:(?:\\s לכ|\\s en|\\s)?(?<subject>(?:(?!#).)*(?:(?!\\s).))\\s?(?:\\((?<body>(?:\\s|\\S)*)\\))?",
+                "bumpVersion": true
+            }
+        },
+        "remotes": {
+            "origin": {
+                "user": null,
+                "password": null,
+                "sshAuth": false,
+                "passphrase": null,
+                "privateKey": null
+            }
+        }
+    }
+}
