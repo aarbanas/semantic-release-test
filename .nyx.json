@@ -48,12 +48,10 @@
         "template": null,
         "substitutions": {}
     },
-    "version": {
-        "scheme": "SEMVER"
-    },
+    "version": "SEMVER",
     "substitutions": {
         "enabled": [],
-        "items": []
+        "items": {}
     },
     "git": {
         "commitMessageConventions": {
