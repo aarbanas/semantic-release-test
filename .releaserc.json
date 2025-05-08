@@ -2,7 +2,8 @@
   "branches": [
     "main",
     {
-      "name": "temprelease/+(.+)",
+      "name": "temprelease/${commit_sha}",
+      "range": "${commit_sha}",
       "channel": false
     }
   ],
