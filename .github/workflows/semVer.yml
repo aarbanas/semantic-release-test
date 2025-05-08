@@ -45,12 +45,18 @@ jobs:
           echo "Checking out specific commit SHA: $TARGET_COMMIT_SHA"
           git checkout "$TARGET_COMMIT_SHA"
 
-      - name: Create temporary local release branch
+      - name: Create, checkout, and push temporary local release branch
         id: temp_branch_setup
         run: |
+          COMMIT_SHA="${{ inputs.ref }}"
           TEMP_BRANCH_NAME="temprelease/${{ inputs.ref }}"
           git branch "$TEMP_BRANCH_NAME"
           git checkout "$TEMP_BRANCH_NAME"
+
+          echo "Pushing temporary branch $TEMP_BRANCH_NAME to remote origin"
+          git push origin "$TEMP_BRANCH_NAME" # <--- PUSH THE TEMP BRANCH
+          echo "current_branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OU
+
           echo "branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "Current branch is $(git rev-parse --abbrev-ref HEAD) at commit $(git rev-parse HEAD)"
           echo "Source branch for history analysis by semantic-release is effectively leading up to this commit."
@@ -79,7 +85,13 @@ jobs:
           git checkout ${{ inputs.ref }}
             
           TEMP_BRANCH_NAME=${{ steps.temp_branch_setup.outputs.branch_name }}
+
           echo "Deleting local temporary branch $TEMP_BRANCH_NAME"
           git branch -D "$TEMP_BRANCH_NAME"
+
+          echo "Deleting remote temporary branch origin/$TEMP_BRANCH_NAME"
+          # Use GITHUB_TOKEN for authentication if your default token has push rights
+          git push origin --delete "$TEMP_BRANCH_NAME" || echo "Failed to delete remote branch $TEMP_BRANCH_NAME. It might not exist or permissions issue."
+
           echo "Local branches:"
           git branch
