@@ -1,11 +1,6 @@
 {
   "branches": [
-    "main",
-    {
-      "name": "temprelease/+(.+)",
-      "prerelease": true,
-      "channel": false
-    }
+    "main"
   ],
   "plugins": [
     [
