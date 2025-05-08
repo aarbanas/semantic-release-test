@@ -49,3 +49,18 @@ jobs:
           CONFLUENCE_API_TOKEN: ${{ secrets.CONFLUENCE_API_TOKEN }}
           CONFLUENCE_URL: ${{ secrets.CONFLUENCE_URL }}
           CONFLUENCE_PARENT_PAGE_ID: ${{ secrets.CONFLUENCE_PARENT_PAGE_ID }}
+
+      - name: Clean up temporary branch (optional but good practice)
+        if: always() # Run even if semantic-release fails, to ensure cleanup
+        run: |
+          echo "Switching back to the original source branch ref locally (detached HEAD)"
+          # Switch to the original commit (which is also the tip of source_branch if that was the input)
+          # or switch to the actual source branch head if you want to ensure it's clean.
+          # For simplicity, just checking out the original commit SHA is fine.
+          git checkout ${{ github.event.inputs.commit_sha }}
+            
+          TEMP_BRANCH_NAME="temprelease/${{ github.event.inputs.commit_sha }}"
+          echo "Deleting local temporary branch $TEMP_BRANCH_NAME"
+          git branch -D "$TEMP_BRANCH_NAME"
+          echo "Local branches:"
+          git branch
