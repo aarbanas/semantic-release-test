@@ -28,4 +28,5 @@ jobs:
     uses: ./.github/workflows/semVer.yml
     with:
       environment: prod
+      source_branch: main
     secrets: inherit
