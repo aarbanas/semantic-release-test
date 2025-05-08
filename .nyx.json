@@ -4,7 +4,6 @@
     "dryRun": false,
     "summary": true,
     "stateFile": "state.json",
-    "initialVersion": "3.5.0",
     "version": "SEMVER",
     "services": {
         "github": {
