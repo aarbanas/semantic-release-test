@@ -9,9 +9,14 @@ on:
         required: true
       ref:
         type: string
-        description: git ref to checkout
+        description: Git ref to checkout
         required: false
         default: ${{ github.sha }}
+      source_branch:
+        type: string
+        description: The source branch for commit history analysis (e.g., main, master)
+        required: true
+        default: main
 
 jobs:
   release:
@@ -22,8 +27,29 @@ jobs:
       - name: Checkout to specific commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ inputs.source_branch }}
           fetch-depth: 0
+
+      - name: Verify commit exists on source branch and checkout specific commit
+        run: |
+          TARGET_COMMIT_SHA="${{ inputs.ref }}"
+          SOURCE_BRANCH_NAME="${{ inputs.source_branch }}"
+
+          echo "Verifying commit $TARGET_COMMIT_SHA is part of fetched history for origin/$SOURCE_BRANCH_NAME..."
+
+          if ! git cat-file -e "$TARGET_COMMIT_SHA^{commit}" ; then
+            echo "Error: Commit $TARGET_COMMIT_SHA not found in the fetched repository history."
+            exit 1
+          fi
+
+          # Optional: Verify it's an ancestor if that's a strict requirement
+          # if ! git merge-base --is-ancestor "$TARGET_COMMIT_SHA" "origin/$SOURCE_BRANCH_NAME"; then
+          #  echo "Error: Commit $TARGET_COMMIT_SHA is not an ancestor of origin/$SOURCE_BRANCH_NAME."
+          #  exit 1
+          # fi
+
+          echo "Checking out specific commit SHA: $TARGET_COMMIT_SHA"
+          git checkout "$TARGET_COMMIT_SHA"
 
       - name: Create temporary local release branch
         id: temp_branch
