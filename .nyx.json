@@ -1,6 +1,6 @@
 {
     "$schema": "https://www.mooltiverse.com/nyx/schemas/nyx-run-config-2.x.json",
-    "preset": "conventional-commits",
+    "preset": "conventionalCommits",
     "dryRun": false,
     "summary": true,
     "stateFile": "state.json",
@@ -55,7 +55,7 @@
     },
     "git": {
         "commitMessageConventions": {
-            "conventional-commits": {
+            "conventionalCommits": {
                 "expression": "(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|bump)(?:\\((?<scope>[a-zA-Z0-9_\\-\\/\\.]+)\\))?(?<breaking>!)?:(?:\\s לכ|\\s en|\\s)?(?<subject>(?:(?!#).)*(?:(?!\\s).))\\s?(?:\\((?<body>(?:\\s|\\S)*)\\))?",
                 "bumpVersion": true
             }
