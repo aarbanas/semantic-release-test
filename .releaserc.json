@@ -1,9 +1,12 @@
 {
   "branches": [
-    "main",
     {
-      "name": "temprelease/${commit_sha}",
-      "range": "${commit_sha}",
+      "name": "main",
+      "channel": false
+    },
+    {
+      "name": "temprelease/+(.+)",
+      "prerelease": true,
       "channel": false
     }
   ],
