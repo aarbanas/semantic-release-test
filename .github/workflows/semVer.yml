@@ -25,77 +25,28 @@ jobs:
           ref: ${{ inputs.ref }}
           fetch-depth: 0
 
-      - name: Setup Nyx
-        uses: mooltiverse/nyx@main # Or a specific version like @v3.1.0
-
-      - name: Setup Node.js # If you still need it for npm publish or other scripts
-        uses: actions/setup-node@v3
-        with:
-          node-version: "lts/*"
-          cache: "npm"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Run Nyx Release and Capture Outputs
-        id: run_nyx
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Nyx uses these for the GitHub service if not overridden in .nyx.json
-          GITHUB_REPOSITORY_NAME: ${{ github.repository }}
-          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
-        run: |
-          echo "Running Nyx..."
-          # 'nyx release' will infer version, tag, generate changelog, and publish to GitHub
-          # It respects the .nyx.json configuration.
-          # To get outputs, Nyx can write them to files or standard out.
-          # We'll rely on its standard output parsing or specific output files if available.
-          # For robust output capture, Nyx often writes to a state file or summary.
-          # Let's try to parse its summary or specific output files.
-
-          # Nyx command for full release cycle (infer, tag, publish services)
-          nyx release --summary-file nyx_summary.txt
-
-          # Check if Nyx decided to release
-          if grep -q "Version: BUMP" nyx_summary.txt || grep -q "Version: NEW" nyx_summary.txt || ! grep -q "Version: SAME" nyx_summary.txt; then
-            echo "released=true" >> $GITHUB_OUTPUT
-          else
-            echo "released=false" >> $GITHUB_OUTPUT
-            echo "Nyx determined no new release was necessary."
-            # Extract the current version even if no release
-            CURRENT_VERSION=$(nyx version --current || echo "N/A")
-            echo "version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
-            echo "tag_name=" >> $GITHUB_OUTPUT # No new tag
-            echo "release_notes=" >> $GITHUB_OUTPUT
-            exit 0 # Exit successfully if no release is made
-          fi
-
-          # If released, extract information
-          VERSION=$(nyx version --current) # Get the version Nyx just set/used
-          TAG_NAME=$(nyx version --current --scheme "TAG") # Get the tag name (e.g., v1.2.3)
-          # Nyx 'changelog' command can output the current release notes
-          # Run it *after* 'nyx release' has determined the version range
-          RELEASE_NOTES=$(nyx changelog --release LATEST || echo "Could not retrieve release notes.")
-
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
-          echo "release_notes<<EOF" >> $GITHUB_OUTPUT
-          echo "${RELEASE_NOTES}" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "Nyx process completed."
-          echo "Version: $VERSION"
-          echo "Tag: $TAG_NAME"
-
-      - name: Display Nyx Outputs
-        if: steps.run_nyx.outputs.released == 'true'
-        run: |
-          echo "Nyx determined version: ${{ steps.run_nyx.outputs.new_version }}"
-          echo "Tag created: ${{ steps.run_nyx.outputs.tag_name }}"
-          echo "--- Release Notes Content ---"
-          echo "${{ steps.run_nyx.outputs.release_notes }}"
-          echo "--- End Release Notes Content ---"
-
-      - name: Run Nyx Release (Tag & GitHub Release)
-        id: nyx_release
+      # 2. Run Nyx to publish the release (tag + GitHub Release)
+      - name: Create GitHub release via Nyx
+        id: nyx
         uses: mooltiverse/nyx@main
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # provides GitHub API access for tagging and releases
+        with:
+          command: publish
+          # (No changelogPath => no CHANGELOG.md will be written:contentReference[oaicite:3]{index=3})
+          # (Other inputs like preset, bump, etc. can be set here if needed)
+
+      # 3. Extract the generated release notes from the new GitHub Release
+      - name: Fetch release notes
+        id: notes
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tag = '${{ steps.nyx.outputs.version }}';
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag
+            });
+            core.setOutput("release_notes", release.data.body || "");
