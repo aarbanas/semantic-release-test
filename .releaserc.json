@@ -6,7 +6,6 @@
     },
     {
       "name": "temprelease/+(.+)",
-      "prerelease": true,
       "channel": false
     }
   ],
