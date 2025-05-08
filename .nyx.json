@@ -1,6 +1,6 @@
 {
     "$schema": "https://www.mooltiverse.com/nyx/schemas/nyx-run-config-2.x.json",
-    "preset": "conventionalCommits",
+    "preset": "simple",
     "dryRun": false,
     "summary": true,
     "stateFile": "state.json",
