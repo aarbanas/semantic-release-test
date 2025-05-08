@@ -1,10 +1,6 @@
 {
   "branches": [
     {
-      "name": "main",
-      "channel": false
-    },
-    {
       "name": "temprelease/+(.+)",
       "channel": false
     }
