@@ -4,6 +4,8 @@
     "dryRun": false,
     "summary": true,
     "stateFile": "state.json",
+    "initialVersion": "3.5.0",
+    "version": "SEMVER",
     "services": {
         "github": {
             "type": "GITHUB",
@@ -32,7 +34,6 @@
         "template": null,
         "substitutions": {}
     },
-    "version": "SEMVER",
     "substitutions": {
         "enabled": [],
         "items": {}
@@ -40,7 +41,7 @@
     "git": {
         "commitMessageConventions": {
             "conventionalCommits": {
-                "expression": "(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|bump)(?:\\((?<scope>[a-zA-Z0-9_\\-\\/\\.]+)\\))?(?<breaking>!)?:(?:\\s לכ|\\s en|\\s)?(?<subject>(?:(?!#).)*(?:(?!\\s).))\\s?(?:\\((?<body>(?:\\s|\\S)*)\\))?",
+                "expression": "(?<type>build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test|bump)(?:\\((?<scope>[a-zA-Z0-9_\\-\\/\\.]+)\\))?(?<breaking>!)?: (?<subject>.+)",
                 "bumpVersion": true
             }
         },
