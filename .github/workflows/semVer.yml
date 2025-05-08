@@ -12,11 +12,6 @@ on:
         description: git ref to checkout
         required: false
         default: ${{ github.sha }}
-      source_branch:
-        type: string
-        description: "The source branch for commit history analysis (e.g., main, master)"
-        required: true
-        default: "main"
 
 jobs:
   release:
@@ -27,35 +22,18 @@ jobs:
       - name: Checkout to specific commit
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_branch }}
+          ref: ${{ inputs.ref }}
           fetch-depth: 0
-
-      - name: Verify commit exists on source branch and checkout specific commit
-        run: |
-          TARGET_COMMIT_SHA="${{ inputs.ref }}"
-          SOURCE_BRANCH_NAME="${{ inputs.source_branch }}"
-
-          echo "Verifying commit $TARGET_COMMIT_SHA is part of fetched history for origin/$SOURCE_BRANCH_NAME..."
-          if ! git cat-file -e "$TARGET_COMMIT_SHA^{commit}" ; then
-            echo "Error: Commit $TARGET_COMMIT_SHA not found in the fetched repository history."
-            exit 1
-          fi
-          # Optional: Verify it's an ancestor if that's a strict requirement
-          # if ! git merge-base --is-ancestor "$TARGET_COMMIT_SHA" "origin/$SOURCE_BRANCH_NAME"; then
-          #  echo "Error: Commit $TARGET_COMMIT_SHA is not an ancestor of origin/$SOURCE_BRANCH_NAME."
-          #  exit 1
-          # fi
-
-          echo "Checking out specific commit SHA: $TARGET_COMMIT_SHA"
-          git checkout "$TARGET_COMMIT_SHA"
 
       - name: Create temporary local release branch
         id: temp_branch
         run: |
-          TEMP_BRANCH_NAME="refs/heads/temprelease/${{ inputs.ref }}"
-          git checkout -b "$TEMP_BRANCH_NAME"
+          TEMP_BRANCH_NAME="temprelease/${{ github.event.inputs.commit_sha }}"
+          git branch "$TEMP_BRANCH_NAME"
+          git checkout "$TEMP_BRANCH_NAME"
           echo "branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
-          echo "Current branch is $(git rev-parse --abbrev-ref HEAD)"
+          echo "Current branch is $(git rev-parse --abbrev-ref HEAD) at commit $(git rev-parse HEAD)"
+          echo "Source branch for history analysis by semantic-release is effectively leading up to this commit."
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -66,7 +44,7 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - run: npx semantic-release --branches main --no-ci
+      - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
