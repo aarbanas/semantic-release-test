@@ -4,22 +4,6 @@
     "dryRun": false,
     "summary": true,
     "stateFile": "state.json",
-    "releaseTypes": {
-        "enabled": [
-            "main",
-            "integration",
-            "hotfix",
-            "maintenance",
-            "preview",
-            "patch"
-        ],
-        "publicationServices": [
-            "github"
-        ],
-        "remoteRepositories": [
-            "origin"
-        ]
-    },
     "services": {
         "github": {
             "type": "GITHUB",
