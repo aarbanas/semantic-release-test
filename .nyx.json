@@ -46,7 +46,7 @@
             "chore": "🧹 Chores"
         },
         "template": null,
-        "substitutions": []
+        "substitutions": {}
     },
     "version": {
         "scheme": "SEMVER"
