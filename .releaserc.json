@@ -1,8 +1,7 @@
 {
   "branches": [
     {
-      "name": "temprelease/+(.+)",
-      "channel": false
+      "name": "temprelease/+(.+)"
     }
   ],
   "plugins": [

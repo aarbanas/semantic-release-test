@@ -70,7 +70,7 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - run: npx semantic-release --branches ${{ steps.temp_branch_setup.outputs.branch_name }} --debug --no-ci
+      - run: npx semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
