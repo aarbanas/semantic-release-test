@@ -1,7 +1,5 @@
 {
-    "version": {
-        "scheme": "SEMVER"
-    },
+    "version": "SEMVER",
     "commitMessageConventionsEnabled": "conventionalCommits",
     "services": {
         "github": {
