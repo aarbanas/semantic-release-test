@@ -52,7 +52,7 @@ jobs:
           git checkout "$TARGET_COMMIT_SHA"
 
       - name: Create temporary local release branch
-        id: temp_branch
+        id: temp_branch_setup
         run: |
           TEMP_BRANCH_NAME="temprelease/${{ inputs.ref }}"
           git branch "$TEMP_BRANCH_NAME"
@@ -70,7 +70,7 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - run: npx semantic-release
+      - run: npx semantic-release --branches ${{ steps.temp_branch_setup.outputs.branch_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
