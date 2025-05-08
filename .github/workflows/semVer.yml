@@ -55,7 +55,7 @@ jobs:
 
           echo "Pushing temporary branch $TEMP_BRANCH_NAME to remote origin"
           git push origin "$TEMP_BRANCH_NAME" # <--- PUSH THE TEMP BRANCH
-          echo "current_branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OU
+          echo "current_branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
 
           echo "branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
           echo "Current branch is $(git rev-parse --abbrev-ref HEAD) at commit $(git rev-parse HEAD)"
