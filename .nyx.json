@@ -1,4 +1,5 @@
 {
+    "$schema": "https://www.mooltiverse.com/nyx/schemas/nyx-run-config-2.x.json",
     "preset": "conventionalcommits",
     "dryRun": false,
     "summary": true,
