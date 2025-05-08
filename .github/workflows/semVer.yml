@@ -28,7 +28,7 @@ jobs:
       - name: Create temporary local release branch
         id: temp_branch
         run: |
-          TEMP_BRANCH_NAME="temprelease/${{ github.event.inputs.commit_sha }}"
+          TEMP_BRANCH_NAME="temprelease/${{ inputs.ref }}"
           git branch "$TEMP_BRANCH_NAME"
           git checkout "$TEMP_BRANCH_NAME"
           echo "branch_name=$TEMP_BRANCH_NAME" >> $GITHUB_OUTPUT
