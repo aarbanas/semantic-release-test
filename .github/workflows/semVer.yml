@@ -30,24 +30,23 @@ jobs:
             echo "Semantic release completed successfully"
             echo "$OUTPUT"
             
-            # Check for no-release scenarios
-            if echo "$OUTPUT" | grep -q -E "(The commit should not trigger a release|There are no relevant changes, so no new version is released|The local branch main is behind the remote one, therefore a new version won't be published)"; then
+            # Check for successful Confluence update first
+            if echo "$OUTPUT" | grep -q "Successfully updated PI page:"; then
+              # Extract the full URL from the output
+              FULL_URL=$(echo "$OUTPUT" | grep "Successfully updated PI page: " | sed 's/.*Successfully updated PI page: //' | head -1)
+              echo "confluence-url=$FULL_URL" >> $GITHUB_OUTPUT
+              echo "Found Confluence URL: $FULL_URL"
+              echo "release-status=success" >> $GITHUB_OUTPUT
+            # If no successful update, check for no-release scenarios
+            elif echo "$OUTPUT" | grep -q -E "(The commit should not trigger a release|There are no relevant changes, so no new version is released|The local branch main is behind the remote one, therefore a new version won't be published)"; then
               echo "No release was triggered"
               echo "release-status=no-release" >> $GITHUB_OUTPUT
               echo "confluence-url=" >> $GITHUB_OUTPUT
             else
-              # Extract the full URL from the output for actual releases
-              FULL_URL=$(echo "$OUTPUT" | grep -o "Successfully updated PI page: https://[^[:space:]]*" | sed 's/Successfully updated PI page: //' | head -1)
-              
-              if [ -n "$FULL_URL" ]; then
-                echo "confluence-url=$FULL_URL" >> $GITHUB_OUTPUT
-                echo "Found Confluence URL: $FULL_URL"
-                echo "release-status=success" >> $GITHUB_OUTPUT
-              else
-                echo "No Confluence URL found in output"
-                echo "confluence-url=" >> $GITHUB_OUTPUT
-                echo "release-status=success" >> $GITHUB_OUTPUT
-              fi
+              # Default case - release was created but no Confluence update
+              echo "Release created but no Confluence URL found in output"
+              echo "confluence-url=" >> $GITHUB_OUTPUT
+              echo "release-status=success" >> $GITHUB_OUTPUT
             fi
           else
             echo "Semantic release failed"
