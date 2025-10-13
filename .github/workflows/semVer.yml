@@ -30,20 +30,30 @@ jobs:
             echo "Semantic release completed successfully"
             echo "$OUTPUT"
             
-            # Extract the full URL from the output
-            FULL_URL=$(echo "$OUTPUT" | grep -o "Successfully updated PI page: https://[^[:space:]]*" | sed 's/Successfully updated PI page: //' | head -1)
-            
-            if [ -n "$FULL_URL" ]; then
-              echo "confluence-url=$FULL_URL" >> $GITHUB_OUTPUT
-              echo "Found Confluence URL: $FULL_URL"
-            else
-              echo "No Confluence URL found in output"
+            # Check for no-release scenarios
+            if echo "$OUTPUT" | grep -q "The commit should not trigger a release\|There are no relevant changes, so no new version is released"; then
+              echo "No release was triggered"
+              echo "release-status=no-release" >> $GITHUB_OUTPUT
               echo "confluence-url=" >> $GITHUB_OUTPUT
+            else
+              # Extract the full URL from the output for actual releases
+              FULL_URL=$(echo "$OUTPUT" | grep -o "Successfully updated PI page: https://[^[:space:]]*" | sed 's/Successfully updated PI page: //' | head -1)
+              
+              if [ -n "$FULL_URL" ]; then
+                echo "confluence-url=$FULL_URL" >> $GITHUB_OUTPUT
+                echo "Found Confluence URL: $FULL_URL"
+                echo "release-status=success" >> $GITHUB_OUTPUT
+              else
+                echo "No Confluence URL found in output"
+                echo "confluence-url=" >> $GITHUB_OUTPUT
+                echo "release-status=success" >> $GITHUB_OUTPUT
+              fi
             fi
           else
             echo "Semantic release failed"
             echo "$OUTPUT"
             echo "confluence-url=" >> $GITHUB_OUTPUT
+            echo "release-status=failed" >> $GITHUB_OUTPUT
             exit 1
           fi
         env:
@@ -53,5 +63,15 @@ jobs:
           CONFLUENCE_URL: ${{ secrets.CONFLUENCE_URL }}
           CONFLUENCE_PARENT_PAGE_ID: ${{ secrets.CONFLUENCE_PARENT_PAGE_ID }}
 
-      - name: Echo the Confluence URL for debugging
-        run: echo "Confluence Page URL - ${{ steps.semantic-release.outputs.confluence-url }}"
+      - name: Failed
+        if: steps.semantic-release.outputs.release-status == 'no-release'
+        run: |
+          echo "No release was created - either no relevant changes or commit should not trigger a release"
+          echo "Skipping Confluence publication"
+
+      - name: Success
+        if: steps.semantic-release.outputs.release-status == 'success'
+        run: |
+          echo "Release was successfully created and published to Confluence"
+          echo "Confluence Page URL: ${{ steps.semantic-release.outputs.confluence-url }}"
+
