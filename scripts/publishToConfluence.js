@@ -255,7 +255,12 @@ export default async (pluginConfig, context) => {
       targetPage.version.number,
       targetPage.body.storage.value
     );
-    logger.log(`Successfully updated PI page: ${updatedPage._links.webui}`);
+
+    // Extract base URL from CONFLUENCE_URL (remove /rest/api/content)
+    const confluenceBaseUrl = url.replace('/rest/api/content', '');
+    const fullPageUrl = `${confluenceBaseUrl}${updatedPage._links.webui}`;
+
+    logger.log(`Successfully updated PI page: ${fullPageUrl}`);
   } catch (error) {
     logger.error("Failed to push release notes to Confluence:", error.message);
     logger.error(error);
