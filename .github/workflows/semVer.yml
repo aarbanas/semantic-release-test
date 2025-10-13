@@ -31,7 +31,7 @@ jobs:
             echo "$OUTPUT"
             
             # Check for no-release scenarios
-            if echo "$OUTPUT" | grep -q "The commit should not trigger a release\|There are no relevant changes, so no new version is released"; then
+            if echo "$OUTPUT" | grep -q -E "(The commit should not trigger a release|There are no relevant changes, so no new version is released|The local branch main is behind the remote one, therefore a new version won't be published)"; then
               echo "No release was triggered"
               echo "release-status=no-release" >> $GITHUB_OUTPUT
               echo "confluence-url=" >> $GITHUB_OUTPUT
@@ -74,4 +74,3 @@ jobs:
         run: |
           echo "Release was successfully created and published to Confluence"
           echo "Confluence Page URL: ${{ steps.semantic-release.outputs.confluence-url }}"
-
