@@ -21,6 +21,7 @@ jobs:
         run: yarn
 
       - name: Generate release notes and publish to Confluence
+        id: semantic-release
         run: |
           OUTPUT=$(npx semantic-release 2>&1)
           echo "$OUTPUT"
