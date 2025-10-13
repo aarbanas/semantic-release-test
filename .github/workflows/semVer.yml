@@ -23,12 +23,29 @@ jobs:
       - name: Generate release notes and publish to Confluence
         id: semantic-release
         run: |
-          OUTPUT=$(npx semantic-release 2>&1)
-          echo "$OUTPUT"
+          set -e  # Exit on any error
           
-          # Extract the full URL from the output
-          FULL_URL=$(echo "$OUTPUT" | grep -o "Successfully updated PI page: https://[^[:space:]]*" | sed 's/Successfully updated PI page: //' | head -1)
-          echo "confluence-url=$FULL_URL" >> $GITHUB_OUTPUT
+          # Run semantic-release and capture both stdout and stderr
+          if OUTPUT=$(npx semantic-release 2>&1); then
+            echo "Semantic release completed successfully"
+            echo "$OUTPUT"
+            
+            # Extract the full URL from the output
+            FULL_URL=$(echo "$OUTPUT" | grep -o "Successfully updated PI page: https://[^[:space:]]*" | sed 's/Successfully updated PI page: //' | head -1)
+            
+            if [ -n "$FULL_URL" ]; then
+              echo "confluence-url=$FULL_URL" >> $GITHUB_OUTPUT
+              echo "Found Confluence URL: $FULL_URL"
+            else
+              echo "No Confluence URL found in output"
+              echo "confluence-url=" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Semantic release failed"
+            echo "$OUTPUT"
+            echo "confluence-url=" >> $GITHUB_OUTPUT
+            exit 1
+          fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
