@@ -122,37 +122,72 @@ const getPIPages = async (url, yearPageId, auth) => {
   }
 };
 
+const getAllPIPages = async (url, parentPageId, year, auth, logger) => {
+  const allPiPages = [];
+  const yearsToCheck = [year - 1, year];
+
+  for (const targetYear of yearsToCheck) {
+    try {
+      const yearPage = await getYearPage(url, parentPageId, targetYear, auth);
+      logger.log(`Found year page: ${yearPage.title}`);
+      const piPages = await getPIPages(url, yearPage.id, auth);
+      allPiPages.push(...piPages);
+      logger.log(`Found ${piPages.length} PI pages for year ${targetYear}`);
+    } catch (e) {
+      throw new Error(`No year page found for ${targetYear}`);
+    }
+  }
+
+  logger.log(`Total PI pages across years: ${allPiPages.length}`);
+  return allPiPages;
+};
+
 const findPIForCurrentWeek = (pages, year, currentWeek) => {
-  // Parse each page title to find the matching one
-  return pages.find((page, index) => {
-    if (!page.title.startsWith("PI-")) return false;
+    // Sort pages by year and week (ascending)
+    const sortedPages = [...pages].sort((a, b) => {
+        const [, aYearWeek] = a.title.split("-");
+        const [aYear, aWeek] = aYearWeek.split(".");
+        const [, bYearWeek] = b.title.split("-");
+        const [bYear, bWeek] = bYearWeek.split(".");
 
-    const [, yearWeek] = page.title.split("-");
-    const [pageYear, pageWeek] = yearWeek.split(".");
-    if (parseInt(pageYear) < new Date().getFullYear()) {
-      return false;
+        if (parseInt(aYear) !== parseInt(bYear)) {
+            return parseInt(aYear) - parseInt(bYear);
+        }
+        return parseInt(aWeek) - parseInt(bWeek);
+    });
+
+    // Find the PI page where current date falls between this PI's start and the next PI's start
+    // Iterate from the end to find the most recent applicable PI
+    for (let i = sortedPages.length - 1; i >= 0; i--) {
+        const page = sortedPages[i];
+        const [, yearWeek] = page.title.split("-");
+        const [pageYear, pageWeek] = yearWeek.split(".");
+
+        const pageYearNum = parseInt(pageYear);
+        const pageWeekNum = parseInt(pageWeek);
+
+        // Check if current date is after or equal to this PI's start
+        if (pageYearNum < year || (pageYearNum === year && pageWeekNum <= currentWeek)) {
+            // Check if there's a next PI and current date is before it
+            if (i < sortedPages.length - 1) {
+                const nextPage = sortedPages[i + 1];
+                const [, nextYearWeek] = nextPage.title.split("-");
+                const [nextPageYear, nextPageWeek] = nextYearWeek.split(".");
+
+                const nextYearNum = parseInt(nextPageYear);
+                const nextWeekNum = parseInt(nextPageWeek);
+
+                if (year < nextYearNum || (year === nextYearNum && currentWeek < nextWeekNum)) {
+                    return page;
+                }
+            } else {
+                // This is the last PI, so it's the current one
+                return page;
+            }
+        }
     }
 
-    // If this is the last page, only check if current week is greater than or equal to its week
-    if (index === pages.length - 1) {
-      return parseInt(pageYear) === year && parseInt(pageWeek) <= currentWeek;
-    }
-
-    // For all other pages, check against the next page
-    const nextPage = pages[index + 1];
-    if (!nextPage || !nextPage.title.startsWith("PI-")) {
-      return false;
-    }
-
-    const [, nextChildYearWeek] = nextPage.title.split("-");
-    const [, nextChildPageWeek] = nextChildYearWeek.split(".");
-
-    return (
-      parseInt(pageYear) === year &&
-      parseInt(pageWeek) <= currentWeek &&
-      parseInt(nextChildPageWeek) > currentWeek
-    );
-  });
+    return null;
 };
 
 const updateConfluencePage = async (
@@ -222,19 +257,12 @@ export default async (pluginConfig, context) => {
   const parentPageId = process.env.CONFLUENCE_PARENT_PAGE_ID;
 
   try {
-    // Get current year and week
     const { year, currentWeek } = getCurrentYearAndWeek();
 
-    // First get the year page
-    const yearPage = await getYearPage(url, parentPageId, year, auth);
-    logger.log(`Found year page: ${yearPage.title}`);
-
-    // Then get all PI pages under the year page
-    const piPages = await getPIPages(url, yearPage.id, auth);
-    logger.log(`Found ${piPages.length} PI pages for year ${year}`);
+    const allPiPages = await getAllPIPages(url, parentPageId, year, auth, logger);
 
     // Find the appropriate PI page for current week
-    const targetPage = findPIForCurrentWeek(piPages, year, currentWeek);
+    const targetPage = findPIForCurrentWeek(allPiPages, year, currentWeek);
 
     if (!targetPage) {
       throw new Error(
@@ -242,10 +270,8 @@ export default async (pluginConfig, context) => {
       );
     }
 
-    // Convert markdown to Confluence format
     const confluenceContent = convertMarkdownToConfluence(notes);
 
-    // Update the found page
     const updatedPage = await updateConfluencePage(
       url,
       targetPage.id,
