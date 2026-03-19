@@ -2,15 +2,20 @@
   "name": "semantic-release-test",
   "version": "1.0.0",
   "main": "index.js",
-  "type": "module",
   "repository": "git@github.com:aarbanas/semantic-release-test.git",
   "author": "Andrej Arbanas <andrej.arbanas@porsche.digital>",
   "license": "MIT",
+  "scripts": {
+    "test-confluence": "ts-node scripts/test-confluence.ts"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
+    "@types/node": "^25.5.0",
     "conventional-changelog-conventionalcommits": "^8.0.0",
-    "semantic-release": "^24.2.3"
-  },
-  "dependencies": {}
+    "moment-timezone": "^0.6.1",
+    "semantic-release": "^24.2.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
 }
